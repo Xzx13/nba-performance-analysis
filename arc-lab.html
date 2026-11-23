@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arc Lab · Free Throw Challenge</title><style>:root{color-scheme:dark;font-family:"Avenir Next","Segoe UI",sans-serif;background:#111320;color:#f9f5ef;--orange:#ff9b62;--muted:#b6b6c9}*{box-sizing:border-box}body{margin:0}header{padding:16px max(5vw,calc((100vw - 1000px)/2));border-bottom:1px solid #343444;display:flex;align-items:center;justify-content:space-between;gap:14px;background:#161825}.brand{white-space:nowrap;font-weight:900;letter-spacing:.09em;font-size:1.15rem;color:#f9f5ef;text-decoration:none;display:flex;align-items:center;gap:9px}.logo{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--orange);color:#392333;font-size:24px}nav{display:flex;gap:20px}nav a{font-size:.9rem;color:var(--muted);text-decoration:none}nav a[aria-current],nav a:hover{color:#fff;text-decoration:underline;text-underline-offset:7px;text-decoration-color:var(--orange)}main{width:min(1000px,90%);margin:28px auto 40px}.eyebrow,.score{font-family:ui-monospace,monospace;font-weight:700;letter-spacing:.13em;font-size:.78rem}.eyebrow{color:var(--orange);margin:0 0 6px}h1{font-family:"Avenir Next",Arial,sans-serif;font-size:clamp(2.1rem,5.2vw,3.9rem);letter-spacing:-.065em;line-height:1.03;margin:0;font-weight:850}h1 span{color:var(--orange)}.intro,.feedback p,.about p,.about li{color:#c9c8d6;line-height:1.55}.intro{margin:10px 0 18px}.arena{border:1px solid #49445f;border-radius:14px;overflow:hidden;position:relative;background:#201d36}canvas{display:block;width:100%;height:auto;max-height:43vh;min-height:180px;object-fit:contain;background:#221e39}.score,.legend{display:flex;align-items:center}.score{justify-content:space-between;padding:10px 18px;color:#bbb6ca;background:#211f30}.score strong{color:#fff;margin-left:5px}.legend{gap:18px;color:#c9c5da;padding:7px 18px;font-size:.8rem}.legend i{display:inline-block;width:17px;border-top:2px solid #ffbb83;vertical-align:middle;margin-right:5px}.legend span+span i{border-top:2px dashed #c7c5ee}.console{display:grid;grid-template-columns:1fr 1fr auto;gap:26px;align-items:center;padding:18px 0}.field{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 10px}label{font-weight:650}output{font:700 .92rem ui-monospace,monospace;color:var(--orange)}input{grid-column:1/-1;width:100%;accent-color:var(--orange);margin:0;height:24px}button,.action{font:700 1rem inherit;font-family:inherit;font-weight:750;font-size:1rem;color:#261b21;background:var(--orange);border:0;border-radius:9px;cursor:pointer;padding:13px 26px}.action{display:inline-block;text-decoration:none}button:hover,.action:hover{background:#ffb483}button:disabled{opacity:.65;cursor:default}.feedback{border-left:3px solid var(--orange);padding:2px 14px}.feedback h2{font-size:1.05rem;margin:0}.feedback p{margin:4px 0 0}.about{max-width:730px}.about h2{margin-bottom:4px}.about dl{display:grid;grid-template-columns:auto 1fr;gap:10px 24px;margin:25px 0;padding:18px 20px;background:#211f30;border-radius:10px}.about dt{color:var(--muted)}.about dd{margin:0;font-weight:650}.about ol{padding-left:1.5rem}.about p,.about ol{margin-top:6px}.about li{padding-bottom:7px}.about .model{font-size:.92rem}.action{margin-top:12px}:focus-visible{outline:3px solid #96dbed;outline-offset:4px}@media(max-width:600px){header{padding:14px 4%}nav{gap:12px}.brand{font-size:.98rem}main{width:92%;margin-top:22px}.console{grid-template-columns:1fr 1fr;gap:10px 20px}.console button{grid-column:1/-1}.score{font-size:.73rem}.about dl{grid-template-columns:1fr;gap:3px}.about dd+dt{margin-top:10px}}
+
+[hidden]{display:none!important}</style></head>
+<body><header><a class="brand" href="#play" data-page="play"><span class="logo" aria-hidden="true">◉</span> ARC LAB</a><nav><a href="#play" data-page="play" aria-current="page">Play</a><a href="#course" data-page="course">About the Course</a></nav></header>
+<main id="play"><section class="heading"><div><p class="eyebrow">BASKETBALL PHYSICS</p><h1>Free Throw Challenge<span>.</span></h1><p class="intro">Sink as many shots as you can in five attempts. Change one setting at a time to see what it does.</p></div></section>
+<div class="arena"><div class="score"><span>ATTEMPT <strong id="attempt">1 / 5</strong></span><span>BASKETS <strong id="points">0</strong></span></div><canvas id="court" width="960" height="470" aria-label="Side view of a basketball court showing the ball, hoop and shot trajectories."></canvas><div class="legend"><span><i></i>Current shot</span><span><i></i>Previous shot</span></div></div>
+<div class="console"><div class="field"><label for="angle">Launch angle</label><output id="angleOut" for="angle">50°</output><input type="range" id="angle" min="40" max="65" step="1" value="50"></div><div class="field"><label for="speed">Launch speed</label><output id="speedOut" for="speed">7.0 m/s</output><input type="range" id="speed" min="6" max="8.5" step="0.1" value="7"></div><button id="shoot">Shoot ball</button></div>
+<section class="feedback" role="status" aria-live="polite"><h2 id="result">Your first shot</h2><p id="note">Try the starting settings, then use the result to line up your next shot.</p></section>
+</main><main class="about" id="course" hidden><p class="eyebrow">FREE THROW CHALLENGE</p><h1>About the Course<span>.</span></h1><dl><dt>STEM topic</dt><dd>Projectile motion in basketball</dd><dt>STEM branch</dt><dd>Science · Physics (mechanics)</dd></dl><h2>How the game works</h2><p>Take five free throws from the same spot. Choose a launch angle and speed, then watch the flight. A basket counts when the ball’s center crosses the hoop opening on the way down. Compare consecutive trails to decide how to adjust your next shot.</p><h2>Learning outcomes</h2><p>After playing, you should be able to</p><ol><li>Predict how increasing launch speed changes the ball’s horizontal travel distance when the launch angle stays the same.</li><li>Use two shots at the same speed to explain how a larger launch angle changes the ball’s peak height.</li></ol><p class="model">The model uses constant gravity (9.81 m/s²) and ignores air resistance and rebounds. The reported range is the distance to the floor if nothing interrupts the shot.</p><a class="action" href="#play" data-page="play">Play the game</a></main><script>'use strict';
+const gravity = 9.81, release = 2, rimHeight = 3.05, distance = 4.57;
+function trajectory(angle, speed) {
+  const rad = angle * Math.PI / 180, vx = speed * Math.cos(rad), vy = speed * Math.sin(rad);
+  const peak = release + vy * vy / (2 * gravity);
+  const floorTime = (vy + Math.sqrt(vy * vy + 2 * gravity * release)) / gravity;
+  const crossing = peak >= rimHeight ? (vy + Math.sqrt(2 * gravity * (peak - rimHeight))) / gravity : null;
+  const offset = crossing === null ? null : vx * crossing - distance;
+  const made = offset !== null && Math.abs(offset) <= .225;
+  return { angle, speed, vx, vy, peak, range: vx * floorTime, offset, made, end: made ? crossing + .13 : floorTime };
+}
+const byId = id => document.getElementById(id);
+const court = byId('court'), ctx = court.getContext('2d'), angle = byId('angle'), speed = byId('speed'), button = byId('shoot');
+let attempts = 0, points = 0, previous = null, current = null, time = 0, flying = false;
+const scale = 78, origin = 300, floor = 432;
+const X = x => origin + scale*x, Y = y => floor - scale*y;
+function position(shot,t) { return [X(shot.vx*t), Y(release + shot.vy*t - gravity*t*t/2)]; }
+function line(points, color, width = 2) {
+  ctx.beginPath(); ctx.moveTo(...points[0]); for (const p of points.slice(1)) ctx.lineTo(...p);
+  ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke();
+}
+function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
+function circle(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+const backdrop = document.createElement('canvas'); backdrop.width = court.width; backdrop.height = court.height;
+function scenery() {
+  const sky = ctx.createLinearGradient(0,0,0,floor); sky.addColorStop(0,'#252346');sky.addColorStop(.56,'#895474');sky.addColorStop(1,'#e68c73');rect(0,0,960,470,sky);
+  for(let i=0;i<58;i++)circle((i*193+31)%960,(i*67+19)%165, i%4===0?1.5:.8,'#e4d6d9');
+  circle(168,177,61,'#ffb58b');
+  for(let i=0;i<34;i++){
+    const x=i*30-8, h=23+(i*47)%73;
+    rect(x,303-h,27,h,'#53415f');
+    if(i%3===0) rect(x+13,294-h,2,11,'#53415f');
+    for(let j=0;j<3;j++)rect(x+4+(j%2)*11,312-h+j*13,4,2,'#bc8291');
+  }
+  rect(0,302,960,130,'#39344e');
+  ctx.save();ctx.beginPath();ctx.rect(0,305,960,78);ctx.clip();
+  for(let x=-110;x<1080;x+=20){line([[x,305],[x+75,383]],'#56495e',1);line([[x,305],[x-75,383]],'#56495e',1);}
+  ctx.restore();line([[0,304],[960,304]],'#302c44',4);
+  for(let x=25;x<960;x+=130)rect(x,303,3,80,'#302c44');
+  rect(0,382,960,88,'#a06264');rect(0,floor,960,38,'#ab716a');
+  line([[0,393],[960,393]],'#d49882',2);line([[0,446],[960,446]],'#edb493',3);
+  line([[790,383],[918,470]],'#e4ad91',3);line([[283,403],[252,446]],'#e4ad91',3);
+  const x=X(distance), y=Y(rimHeight);
+  rect(x+66,y-71,11,floor-y+71,'#312d43');line([[x+29,y-34],[x+70,y-58]],'#322e47',8);
+  rect(x+19,y-59,8,67,'#e4dbe4');rect(x+19,y-59,3,67,'#fbefec');
+  line([[x-17,y+2],[x-10,y+27],[x+9,y+27],[x+17,y+2]],'#e0d9e4',2);
+  for(let i=-12;i<=12;i+=8)line([[x+i,y+2],[x+i*.54+4,y+25]],'#e0d9e4',1.6);
+  line([[x-19,y],[x+20,y]],'#ff975d',5);
+  backdrop.getContext('2d').drawImage(court,0,0);
+}
+function trail(shot,end,color,dashed) {
+  const points=[];for(let i=0;i<=75;i++)points.push(position(shot,end*i/75));
+  ctx.setLineDash(dashed?[6,7]:[]);line(points,color,dashed?2:3);ctx.setLineDash([]);
+}
+function ball(x,y) {
+  ctx.save();ctx.translate(x,y);ctx.rotate(current?time*3:-.3);
+  circle(0,0,10,'#372334');circle(0,0,8.6,'#ffa060');
+  line([[-8.5,0],[8.5,0]],'#603448',1.5);line([[0,-8.5],[0,8.5]],'#603448',1.5);
+  for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(-6,side*6);ctx.quadraticCurveTo(0,side*2,6,side*6);ctx.stroke();}
+  ctx.restore();
+}
+function render(){
+  ctx.drawImage(backdrop,0,0);
+  if(previous)trail(previous,previous.end,'#cac6ed',true);
+  if(current)trail(current,time,'#ffbb83',false);
+  ball(...(current?position(current,time):[X(0),Y(release)]));
+}
+function settings(){byId('angleOut').textContent=angle.value+'°';byId('speedOut').textContent=Number(speed.value).toFixed(1)+' m/s';}
+angle.oninput=speed.oninput=settings;
+function finish() {
+  flying=false;const s=current;if(s.made)points++;
+  byId('points').textContent=points;
+  const outcome=s.made?'Basket!':s.offset===null?'Too low.':s.offset<0?'Short of the hoop.':'Past the hoop.';
+  const hint=s.made?'Try a different angle at the same speed.':s.offset===null?'Increase speed or angle to reach rim height.':s.offset<0?'Keep the angle and try a little more speed.':'Keep the angle and reduce speed slightly.';
+  byId('result').textContent=attempts===5?'Final score · '+points+' / 5':outcome;
+  byId('note').textContent=(attempts===5?outcome+' ':'')+s.angle+'° at '+s.speed.toFixed(1)+' m/s · Peak '+s.peak.toFixed(2)+' m · Projected floor range '+s.range.toFixed(2)+' m.'+(attempts<5?' '+hint:'');
+  button.disabled=false;angle.disabled=speed.disabled=attempts===5;
+  button.textContent=attempts===5?'Play again':'Shoot ball';
+  byId('attempt').textContent=Math.min(attempts+1,5)+' / 5';
+}
+function fire(){
+  if(flying)return;
+  if(attempts===5){attempts=points=0;current=previous=null;time=0;angle.value=50;speed.value=7;settings();angle.disabled=speed.disabled=false;
+    byId('attempt').textContent='1 / 5';byId('points').textContent='0';byId('result').textContent='Your first shot';byId('note').textContent='Try the starting settings, then use the result to line up your next shot.';button.textContent='Shoot ball';render();return;}
+  previous=current;current=trajectory(+angle.value,+speed.value);attempts++;flying=true;time=0;
+  angle.disabled=speed.disabled=button.disabled=true;button.textContent='In flight…';byId('result').textContent='Shot '+attempts+' in flight';byId('note').textContent='Watch where the ball crosses rim height on its way down.';
+  const start=performance.now();
+  function frame(now){time=Math.min((now-start)/1000,current.end);render();if(time<current.end)requestAnimationFrame(frame);else finish();}
+  requestAnimationFrame(frame);
+}
+button.onclick=fire;scenery();settings();render();
+
+document.querySelectorAll('[data-page]').forEach(link=>link.addEventListener('click',event=>{
+event.preventDefault();const target=link.dataset.page;
+byId('play').hidden=target!=='play';byId('course').hidden=target!=='course';
+document.querySelectorAll('nav a').forEach(a=>{if(a.dataset.page===target)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});window.scrollTo(0,0);
+}));</script></body></html>
