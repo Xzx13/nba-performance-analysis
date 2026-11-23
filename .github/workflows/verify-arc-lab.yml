@@ -18,7 +18,7 @@ jobs:
       - name: Open the game without credentials and play five shots
         env:
           VIEWPORT: ${{ matrix.viewport }}
-          GAME_URL: https://rawcdn.githack.com/Xzx13/nba-performance-analysis/c8bda9369935c1cf77cc35eddcbb9542e07cc9d3/arc-lab.html
+          GAME_URL: https://htmlpreview.github.io/?https://github.com/Xzx13/nba-performance-analysis/blob/c8bda9369935c1cf77cc35eddcbb9542e07cc9d3/arc-lab.html
         run: |
           python3 - <<'PY'
           from selenium import webdriver
@@ -49,11 +49,6 @@ jobs:
               def no_overflow():
                   assert browser.execute_script('return document.documentElement.scrollWidth <= window.innerWidth')
               browser.get(os.environ['GAME_URL'])
-              if not browser.find_elements(By.ID,'shoot'):
-                  gate = wait.until(EC.element_to_be_clickable((By.XPATH,"//*[self::button or self::a or self::input][normalize-space(.)='Open the page' or @value='Open the page']")))
-                  gate.click()
-                  if len(browser.window_handles)>1:
-                      browser.switch_to.window(browser.window_handles[-1])
               ready()
               print('Anonymous visitor reached the actual game', flush=True)
               no_overflow()
