@@ -1,0 +1,52 @@
+name: Verify public Arc Lab game
+on:
+  push:
+    branches: [arc-lab-game]
+    paths: ['arc-lab.html', '.github/workflows/verify-arc-lab.yml']
+permissions: {}
+jobs:
+  play-as-visitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Install browser test client
+        run: python3 -m pip install --quiet --user --break-system-packages selenium
+      - name: Open the game without credentials and play five shots
+        env:
+          GAME_URL: https://rawcdn.githack.com/Xzx13/nba-performance-analysis/c8bda9369935c1cf77cc35eddcbb9542e07cc9d3/arc-lab.html
+        run: |
+          python3 - <<'PY'
+          import os
+          from selenium import webdriver
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+          from selenium.webdriver.support import expected_conditions as EC
+          options = webdriver.ChromeOptions()
+          options.add_argument('--headless=new')
+          options.add_argument('--window-size=1200,900')
+          with webdriver.Chrome(options=options) as browser:
+              wait = WebDriverWait(browser, 25)
+              browser.get(os.environ['GAME_URL'])
+              if not browser.find_elements(By.ID, 'shoot'):
+                  print(browser.find_element(By.TAG_NAME, 'body').text[:1000], flush=True)
+                  for item in browser.find_elements(By.CSS_SELECTOR, 'button, input[type=submit], a'):
+                      label = (item.text or item.get_attribute('value') or '').strip().lower()
+                      if item.is_displayed() and any(word in label for word in ['continue','proceed','confirm','understand','open file','visit','arc-lab.html']):
+                          item.click()
+                          break
+              wait.until(EC.element_to_be_clickable((By.ID, 'shoot')))
+              browser.find_element(By.LINK_TEXT, 'About the Course').click()
+              course = browser.find_element(By.ID, 'course')
+              assert course.is_displayed() and 'Projectile motion' in course.text
+              assert 'Science' in course.text and len(course.find_elements(By.TAG_NAME,'li')) >= 2
+              course.find_element(By.LINK_TEXT, 'Play the game').click()
+              browser.execute_script("const s=document.getElementById('speed');s.value=7.5;s.dispatchEvent(new Event('input'))")
+              for _ in range(5):
+                  wait.until(EC.element_to_be_clickable((By.ID,'shoot'))).click()
+                  wait.until(EC.element_to_be_clickable((By.ID,'shoot')))
+              assert browser.find_element(By.ID, 'points').text == '5'
+              assert browser.find_element(By.ID, 'shoot').text == 'Play again'
+              browser.find_element(By.ID, 'shoot').click()
+              assert browser.find_element(By.ID, 'points').text == '0'
+              print('Anonymous public game, course page, learning outcomes, scoring and replay passed.')
+          PY
