@@ -8,45 +8,96 @@ jobs:
   play-as-visitor:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
     steps:
       - name: Install browser test client
         run: python3 -m pip install --quiet --user --break-system-packages selenium
       - name: Open the game without credentials and play five shots
         env:
+          VIEWPORT: ${{ matrix.viewport }}
           GAME_URL: https://rawcdn.githack.com/Xzx13/nba-performance-analysis/c8bda9369935c1cf77cc35eddcbb9542e07cc9d3/arc-lab.html
         run: |
           python3 - <<'PY'
-          import os
           from selenium import webdriver
           from selenium.webdriver.common.by import By
+          from selenium.webdriver.common.keys import Keys
           from selenium.webdriver.support.ui import WebDriverWait
           from selenium.webdriver.support import expected_conditions as EC
+          import math
+          import os
+          
           options = webdriver.ChromeOptions()
           options.add_argument('--headless=new')
-          options.add_argument('--window-size=1200,900')
+          options.add_argument('--incognito')
+          options.add_argument('--window-size=1280,900')
           with webdriver.Chrome(options=options) as browser:
-              wait = WebDriverWait(browser, 25)
+              if os.environ['VIEWPORT'] == 'mobile':
+                  browser.execute_cdp_cmd('Emulation.setDeviceMetricsOverride', {'width':390,'height':844,'deviceScaleFactor':2,'mobile':True})
+                  browser.execute_cdp_cmd('Emulation.setTouchEmulationEnabled', {'enabled': True})
+              wait = WebDriverWait(browser, 30)
+              el = lambda name: browser.find_element(By.ID, name)
+              def ready():
+                  return wait.until(EC.element_to_be_clickable((By.ID, 'shoot')))
+              def select_value(name, steps):
+                  control = el(name)
+                  control.send_keys(Keys.HOME)
+                  if steps:
+                      control.send_keys(*([Keys.ARROW_RIGHT] * steps))
+              def no_overflow():
+                  assert browser.execute_script('return document.documentElement.scrollWidth <= window.innerWidth')
               browser.get(os.environ['GAME_URL'])
-              if not browser.find_elements(By.ID, 'shoot'):
-                  print(browser.find_element(By.TAG_NAME, 'body').text[:1000], flush=True)
-                  for item in browser.find_elements(By.CSS_SELECTOR, 'button, input[type=submit], a'):
-                      label = (item.text or item.get_attribute('value') or '').strip().lower()
-                      if item.is_displayed() and any(word in label for word in ['continue','proceed','confirm','understand','open file','visit','arc-lab.html']):
-                          item.click()
-                          break
-              wait.until(EC.element_to_be_clickable((By.ID, 'shoot')))
-              browser.find_element(By.LINK_TEXT, 'About the Course').click()
-              course = browser.find_element(By.ID, 'course')
-              assert course.is_displayed() and 'Projectile motion' in course.text
-              assert 'Science' in course.text and len(course.find_elements(By.TAG_NAME,'li')) >= 2
-              course.find_element(By.LINK_TEXT, 'Play the game').click()
-              browser.execute_script("const s=document.getElementById('speed');s.value=7.5;s.dispatchEvent(new Event('input'))")
-              for _ in range(5):
-                  wait.until(EC.element_to_be_clickable((By.ID,'shoot'))).click()
-                  wait.until(EC.element_to_be_clickable((By.ID,'shoot')))
-              assert browser.find_element(By.ID, 'points').text == '5'
-              assert browser.find_element(By.ID, 'shoot').text == 'Play again'
-              browser.find_element(By.ID, 'shoot').click()
-              assert browser.find_element(By.ID, 'points').text == '0'
-              print('Anonymous public game, course page, learning outcomes, scoring and replay passed.')
+              if not browser.find_elements(By.ID,'shoot'):
+                  gate = wait.until(EC.element_to_be_clickable((By.XPATH,"//*[self::button or self::a or self::input][normalize-space(.)='Open the page' or @value='Open the page']")))
+                  gate.click()
+                  if len(browser.window_handles)>1:
+                      browser.switch_to.window(browser.window_handles[-1])
+              ready()
+              print('Anonymous visitor reached the actual game', flush=True)
+              no_overflow()
+              assert 'Free Throw Challenge' in el('play').text
+              baseline = el('court').screenshot_as_png
+              def trail_pixels():
+                  return browser.execute_script("""const c=document.querySelector('canvas'),p=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let old=0,now=0;for(let i=0;i<p.length;i+=4){if(p[i]==202 && p[i+1]==198 && p[i+2]==237)old++;if(p[i]==255 && p[i+1]==187 && p[i+2]==131)now++;}return [old,now]""")
+              def course_visit():
+                  browser.find_element(By.LINK_TEXT,'About the Course').click()
+                  course = el('course')
+                  assert course.is_displayed() and not el('play').is_displayed()
+                  for phrase in ['Projectile motion in basketball','Science','Physics','How the game works','five free throws','Learning outcomes']:
+                      assert phrase in course.text
+                  assert len(course.find_elements(By.TAG_NAME,'li')) == 2
+                  no_overflow()
+                  course.find_element(By.LINK_TEXT,'Play the game').click()
+                  ready()
+              course_visit()
+              scores = 0
+              for i,(angle,speed,outcome) in enumerate([(50,7,'Short of the hoop.'),(50,7.5,'Basket!'),(50,8.5,'Past the hoop.'),(40,6,'Too low.'),(50,7.5,'Basket!')],1):
+                  select_value('angle',angle-40)
+                  select_value('speed',round((speed-6)*10))
+                  assert el('angleOut').text==str(angle)+'°' and el('speedOut').text==f'{speed:.1f} m/s'
+                  assert el('attempt').text == f'{i} / 5'
+                  ready().click()
+                  assert not el('shoot').is_enabled() and not el('speed').is_enabled() and not el('angle').is_enabled()
+                  ready()
+                  scores += int(outcome=='Basket!')
+                  assert el('points').text == str(scores)
+                  assert outcome in (el('result').text+' '+el('note').text)
+                  vy=speed*math.sin(math.radians(angle))
+                  peak=2+vy**2/(2*9.81)
+                  horizontal=speed*math.cos(math.radians(angle))*(vy+math.sqrt(vy**2+4*9.81))/9.81
+                  assert f'Peak {peak:.2f} m' in el('note').text and f'range {horizontal:.2f} m' in el('note').text
+                  if i in [1,2]:
+                      old,now=trail_pixels()
+                      assert now>10 and (old==0 if i==1 else old>10)
+                  if i==2:
+                      course_visit()
+                      assert el('points').text=='1' and el('attempt').text=='3 / 5'
+              assert el('result').text=='Final score · 2 / 5'
+              assert el('shoot').text=='Play again' and not el('angle').is_enabled()
+              ready().click()
+              assert el('points').text=='0' and el('attempt').text=='1 / 5' and el('angleOut').text=='50°' and el('speedOut').text=='7.0 m/s'
+              assert trail_pixels()==[0,0] and el('angle').is_enabled() and el('speed').is_enabled()
+              print('PASS: course, navigation, sliders, five shots, both trails, feedback, score, physics readouts, replay, layout', os.environ['VIEWPORT'], flush=True)
           PY
